@@ -1,0 +1,55 @@
+* ntencoder
+
+  This is a very simple cli.
+
+  Let's say that we have the following RDF file:
+
+ #+BEGIN_EXAMPLE
+  <http://swat.cse.lehigh.edu/onto/univ-bench.owl#FullProfessor> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor> .
+  <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+  <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor> <http://www.w3.org/2000/01/rdf-schema#label> "professor" .
+  <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Professor> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#Faculty> .
+  <http://swat.cse.lehigh.edu/onto/univ-bench.owl#headOf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+  <http://swat.cse.lehigh.edu/onto/univ-bench.owl#headOf> <http://www.w3.org/2000/01/rdf-schema#label> "is the head of" .
+  <http://swat.cse.lehigh.edu/onto/univ-bench.owl#headOf> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://swat.cse.lehigh.edu/onto/univ-bench.owl#worksFor> .
+  <http://swat.cse.lehigh.edu/onto/univ-bench.owl#memberOf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+ #+END_EXAMPLE
+
+ This program will turn it into something like this:
+
+ #+BEGIN_EXAMPLE
+7 4 8
+7 9 10
+7 11 12
+7 13 14
+15 4 16
+15 11 17
+15 0 18
+19 4 16
+19 11 20
+19 0 21
+22 4 16
+22 11 23
+22 0 24
+25 4 16
+25 11 26
+25 0 24
+27 4 16
+27 11 28
+27 0 21
+29 4 16
+29 11 30
+29 31 32
+29 0 24
+32 33 34
+32 35 36
+34 4 16
+ #+END_EXAMPLE
+
+ How to run:
+
+ #+BEGIN_EXAMPLE
+
+ cargo run --release -- ./tests/data/tbox.nt ./tests/data/abox.nt 2
+ 
+ #+END_EXAMPLE
