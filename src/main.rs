@@ -59,7 +59,7 @@ fn main() {
 	.parse::<i64>()
 	.unwrap();
 
-    let wc: i64 = count_lines(File::open(a_path).unwrap()).unwrap() as i64;
+    let wc: i64 = (count_lines(File::open(a_path).unwrap()).unwrap() as i64) + 1;
 
     println!("Abox size: {:?} triples", wc);
 
@@ -113,27 +113,28 @@ fn main() {
 
     let mut raw_abox = load3nt(a_path);
 
-    for length in 0..(split_line_counts.len()) {
+    for item in 0..(split_line_counts.len()) {
 
-	let mut abox_part = File::create(format!("abox_part{}.ntenc", length)).unwrap();
+	let mut abox_part = File::create(format!("abox_part{}.ntenc", &item)).unwrap();
 
-	for iter_step in 0..split_line_counts[length] {
+	for length in 0..split_line_counts[item] {
 
-	    let current_triple = raw_abox.next().unwrap();
+	    if let Some(current_triple) = raw_abox.next() {
 
-	    let s = &current_triple.0[..];
-	    let p = &current_triple.1[..];
-	    let o = &current_triple.2[..];
+		let s = &current_triple.0[..];
+		let p = &current_triple.1[..];
+		let o = &current_triple.2[..];
 
-	    let key_s = grand_ole_pry.get_or_intern(s);
-	    let key_p = grand_ole_pry.get_or_intern(p);
-	    let key_o = grand_ole_pry.get_or_intern(o);
+		let key_s = grand_ole_pry.get_or_intern(s);
+		let key_p = grand_ole_pry.get_or_intern(p);
+		let key_o = grand_ole_pry.get_or_intern(o);
 
-	    let key_s_int = key_s.into_usize();
-	    let key_p_int = key_p.into_usize();
-	    let key_o_int = key_o.into_usize();
+		let key_s_int = key_s.into_usize();
+		let key_p_int = key_p.into_usize();
+		let key_o_int = key_o.into_usize();
 
-	    writeln!(&mut abox_part, "{:?} {:?} {:?}", key_s_int, key_p_int, key_o_int);
+		writeln!(&mut abox_part, "{:?} {:?} {:?}", key_s_int, key_p_int, key_o_int);
+	    }
 	    
 	}
 	
