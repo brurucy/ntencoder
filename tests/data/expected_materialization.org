@@ -1,0 +1,230 @@
+*  Materialization by hand
+
+** Tbox
+
+At first, there are 25 triples in the tbox.
+
+*** SPO
+
+We have the following SPO assertions:
+
+#+BEGIN_EXAMPLE
+headOf subPropertyOf worksFor
+worksFor subPropertyOf memberOf
+#+END_EXAMPLE
+
+Materializing the rule rdfs5 will yield:
+
+#+BEGIN_EXAMPLE
+headsOf subPropertyOf memberOf
+#+END_EXAMPLE
+
+*** SCO
+
+We have the following SCO assertions:
+
+#+BEGIN_EXAMPLE
+FullProfessor subClassOf Professor
+Professor subClassOf Faculty
+Faculty subClassOf Employee
+#+END_EXAMPLE
+
+Materializing the rule rdfs11 will yield:
+
+#+BEGIN_EXAMPLE
+FullProfessor subClassOf Faculty
+FullProfessor subClassOf Employee
+Professor subClassOf Employee
+#+END_EXAMPLE
+
+*** End result
+
+In total, the fully materialized tbox should have 29 triples:
+
+#+BEGIN_EXAMPLE
+Employee type Class
+Employee label "Employee"
+Faculty type Class
+Faculty label "faculty member"
+Faculty subClassOf Employee
+FullProfessor type Class
+FullProfessor label "full professor"
+FullProfessor subClassOf Professor
+Professor type Class
+Professor label "professor"
+Professor subClassOf Faculty
+headOf type ObjectProperty
+headOf label "is the head of"
+headOf subPropertyOf worksFor
+memberOf type ObjectProperty
+memberOf label "member of"
+worksFor type ObjectProperty
+worksFor label "Works For"
+worksFor subPropertyOf memberOf
+worksFor type TransitiveProperty
+employs inverseOf worksFor
+teacherOf type ObjectProperty
+teacherOf label "teaches"
+teacherOf domain Faculty
+teacherOf range Course
+headsOf subPropertyOf memberOf
+FullProfessor subClassOf Faculty
+FullProfessor subClassOf Employee
+Professor subClassOf Employee
+#+END_EXAMPLE
+
+** Abox
+
+At first, there are 6 triples in the abox.
+
+*** SPO type
+
+We have the following property assertions:
+
+#+BEGIN_EXAMPLE
+FullProfessor7 headOf Department0.University0
+FullProfessor7 teacherOf Course10
+FullProfessor7 worksFor FullProfessor8
+FullProfessor8 worksFor FullProfessor9
+FullProfessor9 worksFor FullProfessor10
+#+END_EXAMPLE
+Materializing the rule rdfs7 will yield:
+#+BEGIN_EXAMPLE
+FullProfessor7 worksFor Department0.University0
+FullProfessor7 memberOf Department0.University0
+FullProfessor7 memberOf FullProfessor8
+FullProfessor8 memberOf FullProfessor9
+FullProfessor9 memberOf FullProfessor10
+#+END_EXAMPLE
+
+*** SCO type
+
+We have the following class assertions:
+#+BEGIN_EXAMPLE
+FullProfessor7 type FullProfessor
+#+END_EXAMPLE
+Materializing the rule rdfs9 will yield:
+#+BEGIN_EXAMPLE
+FullProfessor7 type Professor
+FullProfessor7 type Faculty
+FullProfessor7 type Employee
+#+END_EXAMPLE
+
+*** General Transitivity
+
+We have the following transitive properties:
+#+BEGIN_EXAMPLE
+FullProfessor7 worksFor FullProfessor8
+FullProfessor8 worksFor FullProfessor9
+FullProfessor9 worksFor FullProfessor10
+#+END_EXAMPLE
+A property is transitive if it is declared to be as such, in the tbox:
+#+BEGIN_EXAMPLE
+worksFor type TransitiveProperty
+#+END_EXAMPLE
+This is quite a tricky rule. Unless we fuse it with [[SPO Type]] we will not manage to get correct materialization results
+
+For instance, naively, we would get the following triples materialized:
+#+BEGIN_EXAMPLE
+FullProfessor7 worksFor FullProfessor9
+FullProfessor7 worksFor FullProfessor10
+FullProfessor8 worksFor FullProfessor10
+#+END_EXAMPLE
+However, what about the subPropertyOf assertion that every one who worksFor somebody else, is also a memberOf?
+
+Unless we re-run [[SPO Type]] the results will be wrong.
+
+Thus, we'd have to add the following triples for the result to remain correct:
+#+BEGIN_EXAMPLE
+FullProfessor7 memberOf FullProfessor9
+FullProfessor7 memberOf FullProfessor10
+FullProfessor8 memberOf FullProfessor10
+#+END_EXAMPLE
+
+*** Reflexive inverse
+
+We have the following properties that have inverses:
+#+BEGIN_EXAMPLE
+FullProfessor7 worksFor FullProfessor8
+FullProfessor8 worksFor FullProfessor9
+FullProfessor9 worksFor FullProfessor10
+#+END_EXAMPLE
+A property has an inverse if in the tbox there is such an assertion:
+#+BEGIN_EXAMPLE
+employs inverseOf worksFor
+#+END_EXAMPLE
+Materializing this rule would yield:
+#+BEGIN_EXAMPLE
+Department0.University0 employs FullProfessor7
+FullProfessor8 employs FullProfessor7
+FullProfessor9 employs FullProfessor7
+FullProfessor9 employs FullProfessor8
+FullProfessor10 employs FullProfessor7
+FullProfessor10 employs FullProfessor8
+FullProfessor10 employs FullProfessor9
+#+END_EXAMPLE
+
+*** Domain Type
+
+In the Tbox we have the following domain assertion:
+#+BEGIN_EXAMPLE
+teacherOf domain Faculty
+#+END_EXAMPLE
+And in the ABox:
+#+BEGIN_EXAMPLE
+FullProfessor7 teacherOf Department0.University0.Course10
+#+END_EXAMPLE
+Materializing the rule rdfs2 would yield:
+#+BEGIN_EXAMPLE
+FullProfessor7 type FacultyFullProfessor7 type Faculty
+#+END_EXAMPLE
+
+*** Range Type
+
+In the Tbox we have the following range assertion:
+#+BEGIN_EXAMPLE
+teacherOf range Course
+#+END_EXAMPLE
+And in the ABox:
+#+BEGIN_EXAMPLE
+FullProfessor7 teacherOf Department0.University0.Course10
+#+END_EXAMPLE
+Materializing the rule rdfs2 would yield:
+#+BEGIN_EXAMPLE
+Department0.University0.Course10 type Course
+#+END_EXAMPLE
+
+*** End result
+
+After concatenating all rule application results and removing duplicates, we will end up with 28 triples:
+
+#+BEGIN_EXAMPLE
+FullProfessor7 headOf Department0.University0
+FullProfessor7 type FullProfessor
+FullProfessor7 teacherOf Course10
+FullProfessor7 worksFor FullProfessor8
+FullProfessor8 worksFor FullProfessor9
+FullProfessor9 worksFor FullProfessor10
+FullProfessor7 worksFor Department0.University0
+FullProfessor7 memberOf Department0.University0
+FullProfessor7 memberOf FullProfessor8
+FullProfessor8 memberOf FullProfessor9
+FullProfessor9 memberOf FullProfessor10
+FullProfessor7 type Professor
+FullProfessor7 type Faculty
+FullProfessor7 type Employee
+FullProfessor7 worksFor FullProfessor9
+FullProfessor7 worksFor FullProfessor10
+FullProfessor8 worksFor FullProfessor10
+FullProfessor7 memberOf FullProfessor9
+FullProfessor7 memberOf FullProfessor10
+FullProfessor8 memberOf FullProfessor10
+Department0.University0 employs FullProfessor7
+FullProfessor8 employs FullProfessor7
+FullProfessor9 employs FullProfessor7
+FullProfessor9 employs FullProfessor8
+FullProfessor10 employs FullProfessor7
+FullProfessor10 employs FullProfessor8
+FullProfessor10 employs FullProfessor9
+Department0.University0.Course10 type Course
+#+END_EXAMPLE
