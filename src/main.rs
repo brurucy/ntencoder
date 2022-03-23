@@ -1,8 +1,8 @@
 use clap::{Arg, Command};
 use lasso::{Key, Rodeo};
-use linecount::count_lines;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::path::*;
 
 fn read_file(filename: &str) -> impl Iterator<Item = String> {
     let file = BufReader::new(File::open(filename).unwrap());
@@ -12,10 +12,6 @@ fn read_file(filename: &str) -> impl Iterator<Item = String> {
 pub fn load3nt<'a>(filename: &str) -> impl Iterator<Item = (String, String, String)> + 'a {
     read_file(filename).map(move |line| {
         let mut line_clean = line;
-
-        // Removing the .
-        assert!(line_clean.pop(), ".");
-        assert!(line_clean.pop(), "");
 
         let mut elts = line_clean.split(" ");
 
@@ -47,15 +43,24 @@ fn main() {
         .get_matches();
 
     let t_path = matches.value_of("TBOX_PATH").unwrap();
+    let t_encoded_filename = match Path::new(t_path).file_stem() {
+        Some(file_name) => file_name,
+        None => panic!("Invalid tbox filename!"),
+    };
     let a_path = matches.value_of("ABOX_PATH").unwrap();
-    let wc_tbox: i64 = count_lines(File::open(t_path).unwrap()).unwrap() as i64;
-    let wc_abox: i64 = count_lines(File::open(a_path).unwrap()).unwrap() as i64;
+    let a_encoded_filename = match Path::new(a_path).file_stem() {
+        Some(file_name) => file_name,
+        None => panic!("Invalid abox filename!"),
+    };
 
-    println!("Abox size: {:?} triples", wc_abox);
-    println!("Tbox size: {:?} triples", wc_tbox);
+    let encoded_tbox_file =
+        File::create(format!("{}.ntenc", t_encoded_filename.to_str().unwrap())).unwrap();
+    let mut encoded_tbox_writer = BufWriter::new(encoded_tbox_file);
 
-    let mut encoded_tbox_file = File::create("tbox.ntenc").unwrap();
-    let mut encoded_abox_file = File::create("abox.ntenc").unwrap();
+    let encoded_abox_file =
+        File::create(format!("{}.ntenc", a_encoded_filename.to_str().unwrap())).unwrap();
+
+    let mut encoded_abox_writer = BufWriter::new(encoded_abox_file);
     let mut grand_ole_pry = Rodeo::default();
 
     let rdfsco: &str = "<http://www.w3.org/2000/01/rdf-schema#subClassOf>";
@@ -154,11 +159,8 @@ fn main() {
     grand_ole_pry.get_or_intern(owlnt);
     grand_ole_pry.get_or_intern(owloo);
 
-    let mut lines = 0;
     let raw_tbox = load3nt(t_path);
     raw_tbox.for_each(|triple| {
-        lines += 1;
-
         let s = &triple.0[..];
         let p = &triple.1[..];
         let o = &triple.2[..];
@@ -172,10 +174,11 @@ fn main() {
         let key_o_int = key_o.into_usize();
 
         writeln!(
-            &mut encoded_tbox_file,
+            &mut encoded_tbox_writer,
             "{:?} {:?} {:?}",
             key_s_int, key_p_int, key_o_int
-        );
+        )
+        .unwrap();
     });
 
     let mut raw_abox = load3nt(a_path);
@@ -193,9 +196,10 @@ fn main() {
         let key_o_int = key_o.into_usize();
 
         writeln!(
-            &mut encoded_abox_file,
+            &mut encoded_abox_writer,
             "{:?} {:?} {:?}",
             key_s_int, key_p_int, key_o_int
-        );
+        )
+        .unwrap();
     });
 }

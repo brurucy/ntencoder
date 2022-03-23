@@ -8,5 +8,4 @@ edition = "2021"
 
 [dependencies]
 lasso = "0.6.0"
-clap = "3.1.0"
-linecount = "0.1.0"
+clap = "3.1.6"
